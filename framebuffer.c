@@ -196,8 +196,8 @@ void fb_init(void)
 		fb_fail(FBFAIL_INVALID_PITCH_DATA);
 
 	/* Need to set up max_x/max_y before using console_write */
-	max_x = fb_x / CHARSIZE_X;
-	max_y = fb_y / CHARSIZE_Y;
+	max_x = (fb_x / CHARSIZE_X) / 2;
+	max_y = (fb_y / CHARSIZE_Y) / 2;
 
 	console_write(COLOUR_PUSH BG_BLUE BG_HALF FG_CYAN
 			"Framebuffer initialised. Address = 0x");
@@ -234,7 +234,7 @@ static void newline()
 {
 	unsigned int source;
 	/* Number of bytes in a character row */
-	register unsigned int rowbytes = CHARSIZE_Y * pitch;
+	register unsigned int rowbytes = CHARSIZE_Y * pitch * 4;
 
 	consx = 0;
 	if(consy<(max_y-1))
@@ -260,7 +260,7 @@ static void newline()
  */
 void console_write(char *text)
 {
-	volatile unsigned short int *ptr;
+	volatile unsigned short int *ptr, *ptr2;
 
 	unsigned int row, addr;
 	int col;
@@ -337,22 +337,39 @@ void console_write(char *text)
 		 */
 		for(row=0; row<CHARSIZE_Y; row++)
 		{
-			addr = (row+consy*CHARSIZE_Y)*pitch + consx*CHARSIZE_X*2;
+			addr = (row+consy*CHARSIZE_Y)*pitch*2 + consx*CHARSIZE_X*4;
+                        ptr = (unsigned short int *)(screenbase+addr);
+			addr = (row+consy*CHARSIZE_Y)*pitch*2 + consx*CHARSIZE_X*4 + pitch;
+                        ptr2 = (unsigned short int *)(screenbase+addr);
 
 			for(col=(CHARSIZE_X-2); col>=0; col--)
 			{
-				ptr = (unsigned short int *)(screenbase+addr);
-
-				addr+=2;
-
+                                unsigned short int color;
 				if(row<(CHARSIZE_Y-1) && (teletext[ch][row] & (1<<col)))
-					*ptr = fgcolour;
+					color = fgcolour;
 				else
-					*ptr = bgcolour;
+					color = bgcolour;
+
+                                *ptr = color;
+                                ptr++;
+                                *ptr = color;
+                                ptr++;
+
+                                *ptr2 = color;
+                                ptr2++;
+                                *ptr2 = color;
+                                ptr2++;
 			}
 
-			ptr = (unsigned short int *)(screenbase+addr);
 			*ptr = bgcolour;
+                        ptr++;
+			*ptr = bgcolour;
+                        ptr++;
+
+			*ptr2 = bgcolour;
+                        ptr2++;
+			*ptr2 = bgcolour;
+                        ptr2++;
 		}
 
 		if(++consx >=max_x)
@@ -361,3 +378,4 @@ void console_write(char *text)
 		}
 	}
 }
+
