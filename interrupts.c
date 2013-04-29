@@ -67,6 +67,7 @@ __attribute__ ((interrupt ("IRQ"))) void interrupt_irq(void)
 {
 	*armTimerIRQClear = 0;
 	led_invert();
+        gpio_check();
 }
 
 __attribute__ ((interrupt ("ABORT"))) void interrupt_data_abort(void)

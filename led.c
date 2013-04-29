@@ -1,10 +1,12 @@
 #include "led.h"
 #include "memory.h"
+#include "framebuffer.h"
 
 /* Addresses of ARM GPIO devices (with conversion to virtual addresses)
  * See BCM2835 peripherals guide
  */
 static volatile unsigned int *gpioGPFSEL1 = (unsigned int *) mem_p2v(0x20200004);
+static volatile unsigned int *gpioGPFSEL2 = (unsigned int *) mem_p2v(0x20200008);
 static volatile unsigned int *gpioGPSET0 = (unsigned int *) mem_p2v(0x2020001c);
 static volatile unsigned int *gpioGPCLR0 = (unsigned int *) mem_p2v(0x20200028);
 static volatile unsigned int *gpioGPLEV0 = (unsigned int *) mem_p2v(0x20200034);
@@ -132,4 +134,70 @@ void output32(unsigned int num)
 void output(unsigned int num)
 {
 	output_n(num, 8);
+}
+
+
+void gpio(void)
+{
+    /*
+     * GPIO 22 is pulled low
+     * don't use an alt function
+     * 
+     * pull down GPIO 22 (pin 15)
+     * make it an input pin 
+     * make sure it's GPIO 22
+     * 
+     * GPIO Alternate function select register 2 - GPFSEL2 address = 0x7E200008
+     * FSEL22 -> 000 = GPIO Pin 22 is an input
+     * FSEL22 is bits 8-6
+     * 
+     * GPPUD 0x7E200094 = GPIO Pin Pull-up/down Enable 00-off, 01-down 10-up
+     * 
+     * To read, use GPLEVn to get value of pin
+     * GPLEV0 = 0x7E200034 - this is for pins 0..31, 32 bits, one per pin
+     */
+}
+
+void gpio_init(void)
+{
+	unsigned int var;
+
+	/* Each GPIO has 3 bits which determine its function
+	 * GPIO 14 and 16 are in GPFSEL1
+	 */
+	/* Read current value of GPFSEL1 */
+	var = *gpioGPFSEL2;
+
+	/* GPIO 22 = 000 - input */
+	var&=~(7<<6);
+
+	/* Write back updated value */
+	*gpioGPFSEL2 = var;
+
+	/* Set up pull-up on GPIO14 */
+	/* Enable pull-up control, then wait at least 150 cycles
+	 * The delay loop actually waits longer than that
+	 */
+	*gpioGPPUD = 1;
+	delay();
+
+	/* Set the pull up/down clock for pin 14*/
+	*gpioPUDCLK0 = 1<<22;
+	*gpioPUDCLK1 = 0;
+	delay();
+
+	/* Disable pull-up control and reset the clock registers */
+	*gpioGPPUD = 0;
+	*gpioPUDCLK0 = 0;
+	*gpioPUDCLK1 = 0;
+}
+
+void gpio_check()
+{
+    unsigned int pins = *gpioGPLEV0;
+    if (pins & 1<<22) {
+        console_write("1");
+    } else {
+        console_write("0");
+    }
 }

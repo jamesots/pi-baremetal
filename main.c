@@ -161,6 +161,7 @@ void main(unsigned int r0, unsigned int machtype, unsigned int atagsaddr)
 	/* Initialise stuff */
 	mem_init();
 	led_init();
+        gpio_init();
 	fb_init();
 	interrupts_init();
 
