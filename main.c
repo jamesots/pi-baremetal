@@ -219,6 +219,11 @@ void main(unsigned int r0, unsigned int machtype, unsigned int atagsaddr)
 
 	console_write(FG_WHITE BG_GREEN BG_HALF "\nOK LED flashing under interrupt");
 
+//        console_write(FG_WHITE BG_BLACK "\n");
+//	while(1) {
+//            console_write(FG_WHITE BG_BLACK "hello ");
+//        }
+
 	console_write(BG_BLACK FG_YELLOW
 		"\n\nPerforming deliberate prefetch abort (calling non-existent code at 0x02100000): "
 		FG_RED BG_RED BG_HALF);
@@ -228,7 +233,6 @@ void main(unsigned int r0, unsigned int machtype, unsigned int atagsaddr)
 
 	console_write(FG_WHITE BG_RED BG_HALF "\ndeliberate_prefetch_abort() didn't abort!");
 
-	while(1);
 }
 
 void main_endloop(void)

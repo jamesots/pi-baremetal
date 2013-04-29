@@ -234,7 +234,7 @@ static void newline()
 {
 	unsigned int source;
 	/* Number of bytes in a character row */
-	register unsigned int rowbytes = CHARSIZE_Y * pitch * 4;
+	register unsigned int rowbytes = CHARSIZE_Y * pitch * 2;
 
 	consx = 0;
 	if(consy<(max_y-1))
