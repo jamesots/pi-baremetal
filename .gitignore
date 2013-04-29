@@ -1,0 +1,5 @@
+*.o
+nbproject
+kernel.elf
+kernel.img
+make.dep
